@@ -10,8 +10,9 @@ module ModTestBoostedFrame
   ! Revision history:
   ! 12/18/2024 - Tests the schemes and plot figures for the paper
   !              by Sokolov&Gombosi (2004)
-  use ModExactRs
+  use ModExactRS
   use ModPlotFile
+  use ModUtilities, ONLY: linear_scalar, linear_vector
   use ModBoostedFrame, ONLY: set_param, update_hydro_var, update_mhd8wave_var
   implicit none
   real, parameter ::  cThird = 1.0/3.0, &
@@ -441,7 +442,6 @@ contains
   end subroutine test_hydro_t
   !============================================================================
   subroutine get_mhd_rs
-    use ModInterpolate, ONLY: interpolate_vector, linear
 
     real, parameter :: Gamma = 1.40
     real :: Time = 80.0, TimeLimit = 200.0, X10 = 400.0, TimeForecast = 40.0
@@ -522,10 +522,9 @@ contains
     ! Interpolate solution in the boosted frame
     do i = 1, nCell
        Lambda = (X_I(i) - 400)/TimeForecast
-       ExactForecastX_VI(:,i) = interpolate_vector(ExactX_VI, 8, 1, &
-            [1], [nCell],&
-            x_D = [Lambda/(1 + max(Lambda, 0.0)*tOffsetPerR)],      &
-            x1_I = Lambda_I, DoExtrapolate = .false.)
+       ExactForecastX_VI(:,i) = linear_vector(ExactX_VI, 8, 1, nCell, &
+            x = Lambda/(1 + max(Lambda, 0.0)*tOffsetPerR), &
+            x_I = Lambda_I, DoExtrapolate = .false.)
     end do
     call save_plot_file(NameFile='mhd_forecast_rs_X_4000.out', &
          TypeFileIn='ascii', TimeIn=tSimulation, nStepIn = nStep, &
@@ -541,10 +540,10 @@ contains
     open(11,file='mhd_rs_T_200.out',status='replace')
     do i = 1, 1000
        Lambda = X10/Time_I(i)
-       ExactByT400_I(i) = linear(ExactX_VI(By_,:), 1, nCell,        &
+       ExactByT400_I(i) = linear_scalar(ExactX_VI(By_,:), 1, nCell,        &
             x = Lambda,      &
             x_I = Lambda_I, DoExtrapolate = .false.)
-       ExactByForecastT400_I(i) = linear(ExactX_VI(By_,:), 1, nCell,        &
+       ExactByForecastT400_I(i) = linear_scalar(ExactX_VI(By_,:), 1, nCell,        &
             x = Lambda/(1 + max(Lambda, 0.0)*tOffsetPerR),      &
             x_I = Lambda_I, DoExtrapolate = .false.)
        write(11,*)Time_I(i), ExactByT400_I(i), ExactByForecastT400_I(i)
@@ -958,7 +957,7 @@ contains
     State_VC(By_,nCell/2+1:nCell)   = -1.0
     State_VC(P_,:nCell/2) = 1
     State_VC(P_,nCell/2+1:) = 0.1
-    open(11,file='test_mhd_t.out',status='replace')
+    open(11,file='test_mhd_t.out')
     tSimulation = 0; Dt = 0; nStep = 0
     do
        if(tSimulation >= 0.50*TimeLimit)EXIT

@@ -30,7 +30,7 @@ module ModBoostedFrame
 contains
   !============================================================================
   subroutine set_param(tOffsetPerRin, Gamma, ToleranceIn, UseSi, nIterMax)
-    use ModConst, ONLY: cMu
+    real, parameter:: cMu = 3.1415926535897*4E-7
     ! Prepares the module to update primitive variables in the boosted frame
     real,           intent(in) :: tOffsetPerRin
     real, OPTIONAL, intent(in) :: Gamma
